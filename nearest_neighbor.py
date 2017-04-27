@@ -1,6 +1,8 @@
 import math
 import sys
 from decimal import Decimal
+import time
+
 
 #reads from input file and stores tuple points in array
 def readFromText():
@@ -25,7 +27,7 @@ def distanceFormula(x, y):
 	return math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2)
 
 def bruteForce(arr):
-	min = distanceFormula(arr[0], arr[1])
+	min = float('inf')
 	for i in range(0, len(arr)):
 		for j in range(i + 1 ,len(arr)):
 			dist = distanceFormula(arr[i], arr[j])
@@ -43,38 +45,44 @@ def mergeY(A,B):
 			B[0], B[1] = B[1], B[0]
 	return sorted((A+B),key=lambda x:(x[1]))
 
-def divide_and_conquer(arr): 
-	if len(arr) == 1:
-		return float('inf'), arr
-	if len(arr) == 2:
-		return distanceFormula(arr[0], arr[1]), arr
+def dc(arr):
+	#overall smallest distance (faster than best distance on recursive call)
+	best = [distanceFormula(arr[0], arr[1])]
+	def divide_and_conquer(arr): 
+		if len(arr) == 1:
+			return arr
+		if len(arr) == 2:
+			return sorted(arr, key=lambda x: x[0])
 
-	#splits into left and right subdivisions and sets min value to d
-	# arr = 
-	mid = len(arr)//2
-	dL, arrL = divide_and_conquer(arr[:mid])
-	dR, arrR = divide_and_conquer(arr[mid:])
-	arr = mergeY(arrL, arrR)
-	d = min(dL, dR)
+		#splits into left and right subdivisions
+		mid = len(arr)//2
+		midx = arr[mid][0]
+		arr = list(mergeY(divide_and_conquer(arr[:mid]), divide_and_conquer(arr[mid:])))
 
-	#removes points that are > d from the division line, this new arr is newArr
-	#then for each point in newArr checks 7 other points or until end of the newArr.
-	newArr = [x for x in arr if x[0] >= mid - d and x[0] <= mid + d]
-	for i in range(0, len(newArr)):
-		count = 0
-		for j in range(i + 1 ,len(newArr)):
-			d = min(distanceFormula(newArr[i],newArr[j]),d)
-			if count == 7:
-				j = len(newArr)
-				break
-	return d, arr #returns tuple of d and arr
+		#removes points that are > d from the division line, this new arr is newArr
+		#then for each point in newArr checks 7 other points or until end of the newArr.
+		newArr = [x for x in arr if abs(x[0]-midx) < best[0]]
+		for i in range(len(newArr)):
+			for j in range(1,8):
+				if i+j < len(newArr):
+					best[0] = min(distanceFormula(newArr[i],newArr[i+j]),best[0])
 
+		return arr 
+	arr.sort()
+	divide_and_conquer(arr)
+	return best[0]
+
+start_time = time.time()
 arr = readFromText()
 #checks if correct agruments
 if arr != -1:
-	# distance = bruteForce(arr)
-	distance = divide_and_conquer(arr)[0]
-	arr2 = divide_and_conquer(arr)[1]
+	#distance = bruteForce(arr)
+	
+	distance = dc(arr)
+
+	#distance = distanceFormula(closestpair(arr)[0], closestpair(arr)[1])
+	
+	print("--- %s seconds ---" % (time.time() - start_time))
 
 	#get argument 1 name.
 	if sys.argv[1].endswith('.txt'):
