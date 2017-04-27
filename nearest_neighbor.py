@@ -1,10 +1,17 @@
 import math
+import sys
 from decimal import Decimal
 
 #reads from input file and stores tuple points in array
 def readFromText():
+	#handles no arguments
+	try:
+        	arg1 = sys.argv[1]
+    	except IndexError:
+	        print "Error: Too few little argument."
+	        sys.exit(1)
 	points = []
-	f = open("input.txt")
+	f = open(sys.argv[1])
 	next = f.readline()
 	while next != "":
 		num1 = Decimal(next.split()[0])
@@ -26,64 +33,53 @@ def bruteForce(arr):
 				min = dist;
 	return min
 
- #intex = 1 for sorted y, 0 for sorted x in tuple
-
- #sorts array of tuples in x or y value
- #intex = 1 for sorted y, 0 for sorted x in tuple
- 
-def mergeSort(alist, index):
-    if len(alist)>1:
-        mid = len(alist)//2
-        lefthalf = alist[:mid]
-        righthalf = alist[mid:]
-
-        mergeSort(lefthalf, index)
-        mergeSort(righthalf, index)
-
-        i=0
-        j=0
-        k=0
-        while i < len(lefthalf) and j < len(righthalf):
-            if lefthalf[i][index] < righthalf[j][index]:
-                alist[k]=lefthalf[i]
-                i=i+1
-            else:
-                alist[k]=righthalf[j]
-                j=j+1
-            k=k+1
-
-        while i < len(lefthalf):
-            alist[k]=lefthalf[i]
-            i=i+1
-            k=k+1
-
-        while j < len(righthalf):
-            alist[k]=righthalf[j]
-            j=j+1
-            k=k+1
+#sorts array A and B if size = 2 and merges then in order of Y.
+def mergeY(A,B):
+	if len(A) == 2:
+		if A[1][1] > A[0][1]:
+			A[0], A[1] = A[1], A[0]
+	if len(B) == 2:
+		if B[1][1] > B[0][1]:
+			B[0], B[1] = B[1], B[0]
+	return sorted((A+B),key=lambda x:(x[1]))
 
 def divide_and_conquer(arr): 
 	if len(arr) == 1:
-		return float('inf')
+		return float('inf'), arr
 	if len(arr) == 2:
-		return distanceFormula(arr[0], arr[1])
+		return distanceFormula(arr[0], arr[1]), arr
 
 	#splits into left and right subdivisions and sets min value to d
+	# arr = 
 	mid = len(arr)//2
-	lefthalf = arr[:mid]
-	righthalf = arr[mid:]
-	d = min(divide_and_conquer(lefthalf), divide_and_conquer(righthalf))
+	dL, arrL = divide_and_conquer(arr[:mid])
+	dR, arrR = divide_and_conquer(arr[mid:])
+	arr = mergeY(arrL, arrR)
+	d = min(dL, dR)
 
-	#checks if there is min value over the division line
+	#removes points that are > d from the division line, this new arr is newArr
+	#then for each point in newArr checks 7 other points or until end of the newArr.
 	newArr = [x for x in arr if x[0] >= mid - d and x[0] <= mid + d]
-	mergeSort(newArr, 1)
-	return min(bruteForce(newArr), d)
+	for i in range(0, len(newArr)):
+		count = 0
+		for j in range(i + 1 ,len(newArr)):
+			d = min(distanceFormula(newArr[i],newArr[j]),d)
+			if count == 7:
+				j = len(newArr)
+				break
+	return d, arr #returns tuple of d and arr
 
 arr = readFromText()
+#checks if correct agruments
+if arr != -1:
+	# distance = bruteForce(arr)
+	distance = divide_and_conquer(arr)[0]
+	arr2 = divide_and_conquer(arr)[1]
 
-# distance = bruteForce(arr)
-distance = divide_and_conquer(arr)
+	#get argument 1 name.
+	if sys.argv[1].endswith('.txt'):
+		file_name = sys.argv[1][:-4]
 
-text_file = open("input_distance.txt", "w")
-text_file.write(str(distance))
-text_file.close()
+	text_file = open(file_name + "_distance.txt", "w")
+	text_file.write(str(distance))
+	text_file.close()
