@@ -74,13 +74,12 @@ def dc(arr):
 
 start_time = time.time()
 arr = readFromText()
+
 #checks if correct agruments
 if arr != -1:
-	#distance = bruteForce(arr)
+	distance = bruteForce(arr)
 	
-	distance = dc(arr)
-
-	#distance = distanceFormula(closestpair(arr)[0], closestpair(arr)[1])
+	#distance = dc(arr)
 	
 	print("--- %s seconds ---" % (time.time() - start_time))
 
